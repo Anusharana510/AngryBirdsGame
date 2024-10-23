@@ -1,0 +1,72 @@
+plugins {
+  id 'java'
+  id 'application'
+  id 'eclipse'
+  id 'idea'
+}
+
+ext {
+  lwjglVersion = "3.3.1"  // Define LWJGL version here
+}
+
+repositories {
+  mavenCentral()
+  maven { url 'https://s01.oss.sonatype.org' }
+  mavenLocal()
+  google()
+  maven { url 'https://oss.sonatype.org/content/repositories/snapshots/' }
+  maven { url 'https://jitpack.io' } // Move JitPack to repositories
+}
+
+dependencies {
+  implementation "org.lwjgl:lwjgl:${lwjglVersion}"
+  implementation "org.lwjgl:lwjgl-glfw:${lwjglVersion}"
+  implementation "org.lwjgl:lwjgl-opengl:${lwjglVersion}"
+  // Add other dependencies as necessary
+}
+
+application {
+  mainClassName = 'io.github.AngryBirds.lwjgl3.Lwjgl3Launcher' // Specify the main class for the application
+}
+
+// Set Java compatibility for all projects
+allprojects {
+  sourceCompatibility = '17' // Make sure this is a String
+  targetCompatibility = '17'  // Make sure this is a String
+}
+
+// Configure subprojects
+subprojects {
+  apply plugin: 'java-library'
+
+  version = '1.0.0' // Define project version
+  ext.appName = 'Game'
+
+  repositories {
+    mavenCentral()
+    maven { url 'https://s01.oss.sonatype.org' }
+    mavenLocal()
+    maven { url 'https://oss.sonatype.org/content/repositories/snapshots/' }
+  }
+
+  tasks.register('generateAssetList') {
+    inputs.dir("${project.rootDir}/assets/") // Set input directory for asset generation
+    File assetsFolder = new File("${project.rootDir}/assets/")
+    File assetsFile = new File(assetsFolder, "assets.txt")
+    assetsFile.delete()
+
+    // Collect all asset paths and append to assets.txt
+    fileTree(assetsFolder).collect { assetsFolder.relativePath(it) }.sort().each {
+      assetsFile.append(it + "/n")
+    }
+  }
+
+  processResources.dependsOn 'generateAssetList' // Ensure assets are generated before processing resources
+
+  compileJava {
+    options.incremental = true // Enable incremental compilation for faster builds
+  }
+}
+
+// Set Eclipse project name
+eclipse.project.name = 'Game'
